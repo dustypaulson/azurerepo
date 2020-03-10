@@ -1,22 +1,22 @@
 {
-    'policyRule': {
-        'if': {
-            'allOf': [
+    "policyRule": {
+        "if": {
+            "allOf": [
                 {
-                    'field': 'type',
-                    'equals': 'Microsoft.Network/applicationGateways'
+                    "field": "type",
+                    "equals": "Microsoft.Network/applicationGateways"
                 },
                 {
-                    'count': {
-                        'field': 'Microsoft.Network/applicationGateways/backendAddressPools[*].backendAddresses[*]'
+                    "count": {
+                        "field": "Microsoft.Network/applicationGateways/backendAddressPools[*].backendAddresses[*]"
                     },
-                    'greater': 0
+                    "greater": 0
                 }
             ]
         },
-        'then': {
-            'effect': 'deny'
+        "then": {
+            "effect": "deny"
         }
     },
-    'parameters': {}
+    "parameters": {}
 }
