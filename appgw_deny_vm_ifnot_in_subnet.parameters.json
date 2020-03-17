@@ -1,9 +1,0 @@
-{
-    "allowedSubnetName": {
-        "type": "String",
-        "metadata": {
-            "displayName": "Subnet name that virtual machines have to be connected to",
-            "description": "Name of the subnet, such as default"
-        }
-    }
-}
