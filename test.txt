@@ -1,3 +1,0 @@
-ResourceGrpName=TravelGamificationProd
-DataFactoryName=CernerProdDataFactory
-CodeFolder=.Subscriptionid=XX
