@@ -24,8 +24,9 @@ catch {
 
 #Variables for script to run. Diagnostic extension will be set on all VM's in same region as storage account
 $subID = "ba1f7dcc-89de-4858-9f8b-b2ad61c895b5"
-$storageAccountName = "dustyforensicstest"
+$storageAccountName = "vhdcapture8788"
 $storageAccountResourceGroup = "Dusty-Forensics"
+$expiryTime = (Get-Date).AddDays(25)
 
 #Select subscription
 Select-AzSubscription -SubscriptionId $subID
@@ -37,7 +38,7 @@ $sa = Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -Name
 $storageLocation = $sa.Location
 
 #Gets VM Object information in the same region as the storage account
-$VMs = Get-AzVM | Where-Object { $_.Location -eq $storageLocation }
+$VMs = Get-AzVM | Where-Object { ($_.Location -eq $storageLocation -and $_.ResourceGroupName -eq "Dusty") }
 foreach ($vm in $vms) {
        #Nulls the variables used to check if Windows or Linux
        $linuxExtensionCheck = $null
@@ -1052,7 +1053,7 @@ foreach ($vm in $vms) {
              $publicSettings = $publicSettings.Replace('__VM_RESOURCE_ID__',$vm.Id)
 
              #Create SAS token for storage account 
-             $sasToken = New-AzStorageAccountSASToken -Service Blob,Table -ResourceType Service,Container,Object -Permission "racwdlup" -Context (Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -AccountName $storageAccountName).Context
+             $sasToken = New-AzStorageAccountSASToken -Service Blob,Table -ResourceType Service,Container,Object -Permission "racwdlup" -ExpiryTime $expiryTime -Context (Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -AccountName $storageAccountName).Context
 
              # Build the protected settings (storage account SAS token)
              $protectedSettings = "{'storageAccountName': '$storageAccountName','storageAccountSasToken': '$sasToken'}"
