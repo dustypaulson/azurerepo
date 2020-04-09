@@ -51,7 +51,7 @@ foreach ($vm in $vms) {
        $status = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Status
 
        #Checks for Linux VM that does not contain the diagnostic extension and that it is turned on 
-       if ($vm.OSProfile.WindowsConfiguration -eq $null -and $linuxExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
+       if ($vm.StorageProfile.OsDisk.OsType -eq "Linux" -and $linuxExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 
              #Create SAS token for storage account 
              $sasToken = New-AzStorageAccountSASToken -Service Blob,Table -ResourceType Service,Container,Object -Permission "racwdlup" -ExpiryTime $expiryTime -Context (Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -AccountName $storageAccountName).Context
