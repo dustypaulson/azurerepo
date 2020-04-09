@@ -53,7 +53,7 @@ foreach ($vm in $vms) {
        $status = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Status
 
        #Checks for Windows VM that does not contain the diagnostic extension and that it is turned on 
-       if ($vm.OSProfile.LinuxConfiguration -eq $null -and $windowsExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
+       if ($vm.StorageProfile.OsDisk.OsType -eq "Windows" -and $windowsExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 
              #Settings to enable for diagnostics
              $publicSettings = '{
@@ -344,7 +344,7 @@ foreach ($vm in $vms) {
        }
 
        #Checks for Linux VM that does not contain the diagnostic extension and that it is turned on 
-       if ($vm.OSProfile.WindowsConfiguration -eq $null -and $linuxExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
+       if ($vm.StorageProfile.OsDisk.OsType -eq "Linux" -and $linuxExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 
              #Builds public settings information for metric onboarding 
              $publicSettings = "{
