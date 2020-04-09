@@ -24,7 +24,7 @@ catch {
 
 #Variables for script to run. Diagnostic extension will be set on all VM's in same region as storage account
 $subID = "ba1f7dcc-89de-4858-9f8b-b2ad61c895b5"
-$storageAccountName = "vhdcapture8788"
+$storageAccountName = "dustyforensicstest"
 $storageAccountResourceGroup = "Dusty-Forensics"
 $expiryTime = (Get-Date).AddDays(25)
 
@@ -38,7 +38,7 @@ $sa = Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -Name
 $storageLocation = $sa.Location
 
 #Gets VM Object information in the same region as the storage account
-$VMs = Get-AzVM | Where-Object { ($_.Location -eq $storageLocation -and $_.ResourceGroupName -eq "Dusty") }
+$VMs = Get-AzVM | Where-Object { ($_.Location -eq $storageLocation) }
 foreach ($vm in $vms) {
        #Nulls the variables used to check if Windows or Linux
        $linuxExtensionCheck = $null
@@ -52,7 +52,7 @@ foreach ($vm in $vms) {
        $status = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Status
 
        #Checks for Windows VM that does not contain the diagnostic extension and that it is turned on 
-       if ($vm.OSProfile.LinuxConfiguration -eq $null -and $windowsExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
+       if ($vm.StorageProfile.OsDisk.OsType -eq "Windows" -and $windowsExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 
              #Settings to enable for diagnostics
              $publicSettings = '{
@@ -343,7 +343,7 @@ foreach ($vm in $vms) {
        }
 
        #Checks for Linux VM that does not contain the diagnostic extension and that it is turned on 
-       if ($vm.OSProfile.WindowsConfiguration -eq $null -and $linuxExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
+       if ($vm.StorageProfile.OsDisk.OsType -eq "Linux" -and $linuxExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 
              #Builds public settings information for metric onboarding 
              $publicSettings = "{
