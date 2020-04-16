@@ -340,6 +340,16 @@ foreach ($vm in $vms) {
 
              #Removes XML files when done
              Remove-Item -Path c:\Metric_Template_Windows.xml -Force -Confirm:$false
+	     
+	      #Cleans up variables to save on socket limitation
+             	Remove-Variable linuxExtensionCheck -Force -Confirm:$false
+		Remove-Variable windowsExtensionCheck -Force -Confirm:$false
+		Remove-Variable status -Force -Confirm:$false
+		Remove-Variable vm -Force -Confirm:$false
+		Remove-Variable sa -Force -Confirm:$false
+		if ($sasToken -ne $null) { Remove-Variable sasToken -Force -Confirm:$false }
+		[System.GC]::GetTotalMemory($true) | Out-Null
+		Start-Sleep -s 10
 
        }
 
@@ -1069,6 +1079,16 @@ foreach ($vm in $vms) {
 
              #Finally tell Azure to install and enable the extension
              Set-AzVMExtension -ResourceGroupName $VM.ResourceGroupName -VMName $vm.Name -Location $vm.Location -ExtensionType LinuxDiagnostic -Publisher Microsoft.Azure.Diagnostics -Name LinuxDiagnostic -SettingString $publicSettings -ProtectedSettingString $protectedSettings -TypeHandlerVersion 3.0 -asjob
+	     
+	      #Cleans up variables to save on socket limitation
+             	Remove-Variable linuxExtensionCheck -Force -Confirm:$false
+		Remove-Variable windowsExtensionCheck -Force -Confirm:$false
+		Remove-Variable status -Force -Confirm:$false
+		Remove-Variable vm -Force -Confirm:$false
+		Remove-Variable sa -Force -Confirm:$false
+		if ($sasToken -ne $null) { Remove-Variable sasToken -Force -Confirm:$false }
+		[System.GC]::GetTotalMemory($true) | Out-Null
+		Start-Sleep -s 10
        }
 } 
 #Checks for running Jobs
