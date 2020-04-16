@@ -54,8 +54,9 @@ foreach ($vm in $vms) {
 	#Checks for Windows VM that does not contain the diagnostic extension and that it is turned on 
 	if ($vm.StorageProfile.OsDisk.OsType -eq "Windows" -and $windowsExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 	    
-        Write-Output "Working on $($vm.Name)"
-
+            	#Outputs name of VM we are working with
+            	Write-Output "Working on $($vm.Name)"
+	    
 		#Gets storage account information
 		$sa = Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -Name $storageAccountName
 
@@ -349,7 +350,7 @@ foreach ($vm in $vms) {
 		Remove-Variable windowsExtensionCheck -Force -Confirm:$false
 		Remove-Variable status -Force -Confirm:$false
 		Remove-Variable vm -Force -Confirm:$false
-		Remove-Variable sa -Force -Confirm:$false
+		if ($sa -ne $null) {Remove-Variable sa -Force -Confirm:$false}
 		if ($sasToken -ne $null) { Remove-Variable sasToken -Force -Confirm:$false }
 		[System.GC]::GetTotalMemory($true) | Out-Null
 		Start-Sleep -s 10
@@ -358,7 +359,8 @@ foreach ($vm in $vms) {
 	#Checks for Linux VM that does not contain the diagnostic extension and that it is turned on 
 	if ($vm.StorageProfile.OsDisk.OsType -eq "Linux" -and $linuxExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 	    
-        Write-Output "Working on $($vm.Name)"
+            #Outputs name of VM we are working with
+            Write-Output "Working on $($vm.Name)"
 
 		#Gets storage account information
 		$sa = Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -Name $storageAccountName
@@ -1084,7 +1086,7 @@ foreach ($vm in $vms) {
 		Remove-Variable windowsExtensionCheck -Force -Confirm:$false
 		Remove-Variable status -Force -Confirm:$false
 		Remove-Variable vm -Force -Confirm:$false
-		Remove-Variable sa -Force -Confirm:$false
+		if ($sa -ne $null) {Remove-Variable sa -Force -Confirm:$false}
 		if ($sasToken -ne $null) { Remove-Variable sasToken -Force -Confirm:$false }
 		[System.GC]::GetTotalMemory($true) | Out-Null
 		Start-Sleep -s 10
