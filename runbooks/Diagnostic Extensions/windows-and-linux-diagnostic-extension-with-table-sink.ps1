@@ -1085,7 +1085,7 @@ Start-Job -Name $($vm.name) -ArgumentList $vm,$storageAccountResourceGroup,$stor
 		$protectedSettings = "{'storageAccountName': '$storageAccountName','storageAccountSasToken': '$sasToken'}"
 
 		#Finally tell Azure to install and enable the extension
-	       Set-AzVMExtension -ResourceGroupName $VM.ResourceGroupName -VMName $vm.Name -Location $vm.Location -ExtensionType LinuxDiagnostic -Publisher Microsoft.Azure.Diagnostics -Name LinuxDiagnostic -SettingString $publicSettings -ProtectedSettingString $protectedSettings -TypeHandlerVersion 3.0 -AsJob
+	       Set-AzVMExtension -ResourceGroupName $VM.ResourceGroupName -VMName $vm.Name -Location $vm.Location -ExtensionType LinuxDiagnostic -Publisher Microsoft.Azure.Diagnostics -Name LinuxDiagnostic -SettingString $publicSettings -ProtectedSettingString $protectedSettings -TypeHandlerVersion 3.0
 
 		Remove-Variable linuxExtensionCheck -Force -Confirm:$false
 		Remove-Variable windowsExtensionCheck -Force -Confirm:$false
