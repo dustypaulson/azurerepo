@@ -350,9 +350,7 @@ foreach ($vm in $vms) {
 		Remove-Variable vm -Force -Confirm:$false
 		Remove-Variable sa -Force -Confirm:$false
 		if ($sasToken -ne $null) { Remove-Variable sasToken -Force -Confirm:$false }
-
 		[System.GC]::GetTotalMemory($true) | Out-Null
-
 		Start-Sleep -s 10
 	}
 
@@ -1086,9 +1084,7 @@ foreach ($vm in $vms) {
 		Remove-Variable vm -Force -Confirm:$false
 		Remove-Variable sa -Force -Confirm:$false
 		if ($sasToken -ne $null) { Remove-Variable sasToken -Force -Confirm:$false }
-
 		[System.GC]::GetTotalMemory($true) | Out-Null
-
 		Start-Sleep -s 10
 	}
 }
