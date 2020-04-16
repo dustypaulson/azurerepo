@@ -23,9 +23,9 @@ catch {
 }
 
 #Variables for script to run. Diagnostic extension will be set on all VM's in same region as storage account
-$subID = "ba1f7dcc-89de-4858-9f8b-b2ad61c895b5"
-$storageAccountName = "vhdcapture8788"
-$storageAccountResourceGroup = "Dusty-Forensics"
+$subID = ""
+$storageAccountName = ""
+$storageAccountResourceGroup = ""
 $blobSinkName = "MyJSONBlob"
 $expiryTime = (Get-Date).AddDays(25)
 
