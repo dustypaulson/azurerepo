@@ -54,7 +54,7 @@ foreach ($vm in $vms) {
 	#Checks for Windows VM that does not contain the diagnostic extension and that it is turned on 
 	if ($vm.StorageProfile.OsDisk.OsType -eq "Windows" -and $windowsExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 	    
-            	#Outputs name of VM we are working with
+	     	#Outputs name of VM we are working with
             	Write-Output "Working on $($vm.Name)"
 	    
 		#Gets storage account information
