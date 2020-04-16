@@ -1,31 +1,30 @@
 $connectionName = "AzureRunAsConnection"
 try
 {
-       # Get the connection "AzureRunAsConnection "
-       $servicePrincipalConnection = Get-AutomationConnection -Name $connectionName
+	# Get the connection "AzureRunAsConnection "
+	$servicePrincipalConnection = Get-AutomationConnection -Name $connectionName
 
-       "Logging in to Azure..."
-       Add-AzAccount `
-            -ServicePrincipal `
-            -TenantId $servicePrincipalConnection.TenantId `
-            -ApplicationId $servicePrincipalConnection.ApplicationId `
-            -CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint
+	"Logging in to Azure..."
+	Add-AzAccount `
+ 		-ServicePrincipal `
+ 		-TenantId $servicePrincipalConnection.TenantId `
+ 		-ApplicationId $servicePrincipalConnection.ApplicationId `
+ 		-CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint
 }
 catch {
-       if (!$servicePrincipalConnection)
-       {
-             $ErrorMessage = "Connection $connectionName not found."
-             throw $ErrorMessage
-       } else {
-             Write-Error -Message $_.Exception
-             throw $_.Exception
-       }
+	if (!$servicePrincipalConnection)
+	{
+		$ErrorMessage = "Connection $connectionName not found."
+		throw $ErrorMessage
+	} else {
+		Write-Error -Message $_.Exception
+		throw $_.Exception
+	}
 }
-
 #Variables for script to run. Diagnostic extension will be set on all VM's in same region as storage account
-$subID = "ba1f7dcc-89de-4858-9f8b-b2ad61c895b5"
-$storageAccountName = "dustyforensicstest"
-$storageAccountResourceGroup = "Dusty-Forensics"
+$subID = ""
+$storageAccountName = ""
+$storageAccountResourceGroup = ""
 $expiryTime = (Get-Date).AddDays(25)
 
 #Select subscription
@@ -38,24 +37,36 @@ $sa = Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -Name
 $storageLocation = $sa.Location
 
 #Gets VM Object information in the same region as the storage account
-$VMs = Get-AzVM | Where-Object { ($_.Location -eq $storageLocation) }
+$VMs = Get-AzVM | Where-Object { ($_.Location -eq $storageLocation) -and $_.ResourceGroupName -eq "Dusty" }
+
+#Job counter
+$i = 0
 foreach ($vm in $vms) {
-       #Nulls the variables used to check if Windows or Linux
-       $linuxExtensionCheck = $null
-       $windowsExtensionCheck = $null
+	Write-Output "Working on $($vm.Name)"
+	#Nulls the variables used to check if Windows or Linux
+	$linuxExtensionCheck = $null
+	$windowsExtensionCheck = $null
 
-       #Checks if diagnostic extension is currently installed
-       $linuxExtensionCheck = Get-AzVMExtension -ResourceGroupName $vm.ResourceGroupName -VMName $vm.Name | Where-Object { $_.ExtensionType -eq "LinuxDiagnostic" }
-       $windowsExtensionCheck = Get-AzVMExtension -ResourceGroupName $vm.ResourceGroupName -VMName $vm.Name | Where-Object { $_.ExtensionType -eq "IaaSDiagnostics" }
+	#Checks if diagnostic extension is currently installed
+	$linuxExtensionCheck = Get-AzVMExtension -ResourceGroupName $vm.ResourceGroupName -VMName $vm.Name | Where-Object { $_.ExtensionType -eq "LinuxDiagnostic" }
+	$windowsExtensionCheck = Get-AzVMExtension -ResourceGroupName $vm.ResourceGroupName -VMName $vm.Name | Where-Object { $_.ExtensionType -eq "IaaSDiagnostics" }
 
-       #Gets power status for VM
-       $status = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Status
+	#Gets power status for VM
+	$status = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Status
 
-       #Checks for Windows VM that does not contain the diagnostic extension and that it is turned on 
-       if ($vm.StorageProfile.OsDisk.OsType -eq "Windows" -and $windowsExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
+	#Checks for Windows VM that does not contain the diagnostic extension and that it is turned on 
+	if ($vm.StorageProfile.OsDisk.OsType -eq "Windows" -and $windowsExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 
-             #Settings to enable for diagnostics
-             $publicSettings = '{
+		#Starts running diagnostic extension
+Start-Job -Name $($vm.name) -ArgumentList $vm,$storageAccountResourceGroup,$storageAccountName -ScriptBlock{ param($vm,$storageAccountResourceGroup,$storageAccountName)
+		#Path to file
+        $path = "c:\Metric_Template_Windows.xml"
+        
+        #Gets storage account information
+		$sa = Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -Name $storageAccountName
+		
+        #Settings to enable for diagnostics
+		$publicSettings = '{
   "storageAccount": "__DIAGNOSTIC_STORAGE_ACCOUNT__",
   "WadCfg": {
     "DiagnosticMonitorConfiguration": {
@@ -326,27 +337,42 @@ foreach ($vm in $vms) {
     }
   }
 }'
+		
+        #Replaces the default config with the storage account and VM resource ID in the public settings information
+		$publicSettings = $publicSettings.Replace('__DIAGNOSTIC_STORAGE_ACCOUNT__',$storageAccountName)
+		$publicSettings = $publicSettings.Replace('__VM_RESOURCE_ID__',$vm.Id)
 
-             #Replaces the default config with the storage account and VM resource ID in the public settings information
-             $publicSettings = $publicSettings.Replace('__DIAGNOSTIC_STORAGE_ACCOUNT__',$storageAccountName)
-             $publicSettings = $publicSettings.Replace('__VM_RESOURCE_ID__',$vm.Id)
+		#Outputs an xml file that will be used to set the diagnostics
+		$publicSettings | Out-File c:\Metric_Template_Windows.xml
+        
+        #Sets Windows Diagnostic Extension
+		Set-AzVMDiagnosticsExtension -ResourceGroupName $vm.ResourceGroupName -VMName $vm.Name -DiagnosticsConfigurationPath $path
+		
+        #Removes XML files when done
+		Remove-Item -Path c:\Metric_Template_Windows.xml -Force -Confirm:$false
 
-             #Outputs an xml file that will be used to set the diagnostics
-             $publicSettings | Out-File c:\Metric_Template_Windows.xml
+}
 
-             #Starts running diagnostic extension
-             Set-AzVMDiagnosticsExtension -ResourceGroupName $vm.ResourceGroupName -VMName $vm.Name -DiagnosticsConfigurationPath c:\Metric_Template_Windows.xml
+		Remove-Variable linuxExtensionCheck -Force -Confirm:$false
+		Remove-Variable windowsExtensionCheck -Force -Confirm:$false
+		Remove-Variable status -Force -Confirm:$false
+		Remove-Variable vm -Force -Confirm:$false
+		Remove-Variable sa -Force -Confirm:$false
+		if ($sasToken -ne $null) { Remove-Variable sasToken -Force -Confirm:$false }
 
-             #Removes XML files when done
-             Remove-Item -Path c:\Metric_Template_Windows.xml -Force -Confirm:$false
+		[System.GC]::GetTotalMemory($true) | Out-Null
 
-       }
+		Start-Sleep -s 10
+	}
 
-       #Checks for Linux VM that does not contain the diagnostic extension and that it is turned on 
-       if ($vm.StorageProfile.OsDisk.OsType -eq "Linux" -and $linuxExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
+	#Checks for Linux VM that does not contain the diagnostic extension and that it is turned on 
+	if ($vm.StorageProfile.OsDisk.OsType -eq "Linux" -and $linuxExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 
-             #Builds public settings information for metric onboarding 
-             $publicSettings = "{
+		#Gets storage account information
+		$sa = Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -Name $storageAccountName
+
+		#Builds public settings information for metric onboarding 
+		$publicSettings = "{
   'StorageAccount': '__DIAGNOSTIC_STORAGE_ACCOUNT__',
   'ladCfg': {
     'diagnosticMonitorConfiguration': {
@@ -1048,17 +1074,41 @@ foreach ($vm in $vms) {
   }
 }"
 
-             #Replaces the default config with the storage account and VM resource ID in the public settings information
-             $publicSettings = $publicSettings.Replace('__DIAGNOSTIC_STORAGE_ACCOUNT__',$storageAccountName)
-             $publicSettings = $publicSettings.Replace('__VM_RESOURCE_ID__',$vm.Id)
+		#Replaces the default config with the storage account and VM resource ID in the public settings information
+		$publicSettings = $publicSettings.Replace('__DIAGNOSTIC_STORAGE_ACCOUNT__',$storageAccountName)
+		$publicSettings = $publicSettings.Replace('__VM_RESOURCE_ID__',$vm.Id)
 
-             #Create SAS token for storage account 
-             $sasToken = New-AzStorageAccountSASToken -Service Blob,Table -ResourceType Service,Container,Object -Permission "racwdlup" -ExpiryTime $expiryTime -Context (Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -AccountName $storageAccountName).Context
+		#Create SAS token for storage account 
+		$sasToken = New-AzStorageAccountSASToken -Service Blob,Table -ResourceType Service,Container,Object -Permission "racwdlup" -ExpiryTime $expiryTime -Context (Get-AzStorageAccount -ResourceGroupName $storageAccountResourceGroup -AccountName $storageAccountName).Context
 
-             # Build the protected settings (storage account SAS token)
-             $protectedSettings = "{'storageAccountName': '$storageAccountName','storageAccountSasToken': '$sasToken'}"
+		# Build the protected settings (storage account SAS token)
+		$protectedSettings = "{'storageAccountName': '$storageAccountName','storageAccountSasToken': '$sasToken'}"
 
-             #Finally tell Azure to install and enable the extension
-             Set-AzVMExtension -ResourceGroupName $VM.ResourceGroupName -VMName $vm.Name -Location $vm.Location -ExtensionType LinuxDiagnostic -Publisher Microsoft.Azure.Diagnostics -Name LinuxDiagnostic -SettingString $publicSettings -ProtectedSettingString $protectedSettings -TypeHandlerVersion 3.0
-       }
-} 
+		#Finally tell Azure to install and enable the extension
+	       Set-AzVMExtension -ResourceGroupName $VM.ResourceGroupName -VMName $vm.Name -Location $vm.Location -ExtensionType LinuxDiagnostic -Publisher Microsoft.Azure.Diagnostics -Name LinuxDiagnostic -SettingString $publicSettings -ProtectedSettingString $protectedSettings -TypeHandlerVersion 3.0 -AsJob
+
+		Remove-Variable linuxExtensionCheck -Force -Confirm:$false
+		Remove-Variable windowsExtensionCheck -Force -Confirm:$false
+		Remove-Variable status -Force -Confirm:$false
+		Remove-Variable vm -Force -Confirm:$false
+		Remove-Variable sa -Force -Confirm:$false
+		if ($sasToken -ne $null) { Remove-Variable sasToken -Force -Confirm:$false }
+
+		[System.GC]::GetTotalMemory($true) | Out-Null
+
+		Start-Sleep -s 10
+	}
+}
+
+#Checks for running Jobs
+$runningJobs = Get-Job
+do {
+	if ($runningJobs.state -contains "Running") {
+		{ "Jobs Still Running" }
+		$runningJobs = Get-Job | Where-Object -Property State -EQ running
+		Start-Sleep -Seconds 30
+	}
+}
+until ($runningJobs.state -notcontains "running")
+
+Get-Job
