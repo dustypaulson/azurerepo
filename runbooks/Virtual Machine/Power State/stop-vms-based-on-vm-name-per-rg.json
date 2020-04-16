@@ -1,0 +1,60 @@
+$connectionName = "AzureRunAsConnection"
+try
+{
+	# Get the connection "AzureRunAsConnection "
+	$servicePrincipalConnection = Get-AutomationConnection -Name $connectionName
+
+	"Logging in to Azure..."
+	Add-AzAccount `
+ 		-ServicePrincipal `
+ 		-TenantId $servicePrincipalConnection.TenantId `
+ 		-ApplicationId $servicePrincipalConnection.ApplicationId `
+ 		-CertificateThumbprint $servicePrincipalConnection.CertificateThumbprint
+}
+catch {
+	if (!$servicePrincipalConnection)
+	{
+		$ErrorMessage = "Connection $connectionName not found."
+		throw $ErrorMessage
+	} else {
+		Write-Error -Message $_.Exception
+		throw $_.Exception
+	}
+}
+
+#Enter the names of the virtual machines you want to restart
+[array]$vmNames = @{}
+
+#Enter the resource group name the virtual machines are in
+[string]$resourceGroupName = ""
+
+#Subscription Id where the virtual machines are in
+[string]$subID = ""
+
+#Selects Subscription VM's Are Located In
+Select-AzSubscription -SubscriptionId $subID
+
+#Builds function to check for running jobs
+function RunningJobs {
+	do {
+		$runningJobs = Get-Job | Where-Object { $_.state -eq "Running" }
+		if ($runningJobs.state -eq "Running")
+		{
+			Start-Sleep -Seconds 10
+		}
+		else
+		{ Write-Output "Jobs Completed" }
+	}
+	until ($runningJobs -eq $null)
+}
+
+#Restarts virtual machines as jobs
+foreach ($vm in $vmNames) {
+	Stop-AzVM -Name $vm -ResourceGroupName $resourceGroupName -Confirm:$false -AsJob
+}
+
+#Waits for jobs to finish
+RunningJobs
+
+#Gets jobs and displays then as an output for status
+Get-Job
