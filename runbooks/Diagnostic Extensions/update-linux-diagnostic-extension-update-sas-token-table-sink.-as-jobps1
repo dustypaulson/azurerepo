@@ -62,3 +62,16 @@ foreach ($vm in $vms) {
              Set-AzVMExtension -ResourceGroupName $VM.ResourceGroupName -VMName $vm.Name -Location $vm.Location -ExtensionType LinuxDiagnostic -Publisher Microsoft.Azure.Diagnostics -Name LinuxDiagnostic -SettingString $linuxExtensionCheck.PublicSettings -ProtectedSettingString $protectedSettings -TypeHandlerVersion 3.0 -asjob
        }
 } 
+
+#Checks for running Jobs
+$runningJobs = Get-Job
+do {
+	if ($runningJobs.state -contains "Running") {
+		{ "Jobs Still Running" }
+		$runningJobs = Get-Job | Where-Object -Property State -EQ running
+		Start-Sleep -Seconds 60
+	}
+}
+until ($runningJobs.state -notcontains "running")
+
+Get-Job
