@@ -67,6 +67,6 @@ foreach ($vm in $vms) {
     }, 'storageAccountSasToken': '$sasToken'}"
 
              #Finally tell Azure to install and enable the extension
-             Set-AzVMExtension -ResourceGroupName $VM.ResourceGroupName -VMName $vm.Name -Location $vm.Location -ExtensionType LinuxDiagnostic -Publisher Microsoft.Azure.Diagnostics -Name LinuxDiagnostic -SettingString $linuxExtensionCheck.PublicSettings -ProtectedSettingString $protectedSettings -TypeHandlerVersion 3.0
+             Set-AzVMExtension -ResourceGroupName $VM.ResourceGroupName -VMName $vm.Name -Location $vm.Location -ExtensionType LinuxDiagnostic -Publisher Microsoft.Azure.Diagnostics -Name LinuxDiagnostic -SettingString $linuxExtensionCheck.PublicSettings -ProtectedSettingString $protectedSettings -TypeHandlerVersion 3.0 -asjob
        }
 } 
