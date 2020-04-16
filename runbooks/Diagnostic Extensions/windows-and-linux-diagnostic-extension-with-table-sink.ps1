@@ -359,9 +359,7 @@ Start-Job -Name $($vm.name) -ArgumentList $vm,$storageAccountResourceGroup,$stor
 		Remove-Variable vm -Force -Confirm:$false
 		Remove-Variable sa -Force -Confirm:$false
 		if ($sasToken -ne $null) { Remove-Variable sasToken -Force -Confirm:$false }
-
 		[System.GC]::GetTotalMemory($true) | Out-Null
-
 		Start-Sleep -s 10
 	}
 
@@ -1093,22 +1091,7 @@ Start-Job -Name $($vm.name) -ArgumentList $vm,$storageAccountResourceGroup,$stor
 		Remove-Variable vm -Force -Confirm:$false
 		Remove-Variable sa -Force -Confirm:$false
 		if ($sasToken -ne $null) { Remove-Variable sasToken -Force -Confirm:$false }
-
 		[System.GC]::GetTotalMemory($true) | Out-Null
-
 		Start-Sleep -s 10
 	}
 }
-
-#Checks for running Jobs
-$runningJobs = Get-Job
-do {
-	if ($runningJobs.state -contains "Running") {
-		{ "Jobs Still Running" }
-		$runningJobs = Get-Job | Where-Object -Property State -EQ running
-		Start-Sleep -Seconds 30
-	}
-}
-until ($runningJobs.state -notcontains "running")
-
-Get-Job
