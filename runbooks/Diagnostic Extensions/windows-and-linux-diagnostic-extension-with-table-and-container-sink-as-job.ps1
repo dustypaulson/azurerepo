@@ -23,10 +23,10 @@ catch {
 }
 
 #Variables for script to run. Diagnostic extension will be set on all VM's in same region as storage account
-$subID = "ba1f7dcc-89de-4858-9f8b-b2ad61c895b5"
-$storageAccountName = "vhdcapture8788"
-$storageAccountResourceGroup = "Dusty-Forensics"
-$blobSinkName = "MyJSONBlob"
+$subID = ""
+$storageAccountName = ""
+$storageAccountResourceGroup = ""
+$blobSinkName = ""
 $expiryTime = (Get-Date).AddDays(25)
 
 #Select subscription
@@ -1071,3 +1071,15 @@ foreach ($vm in $vms) {
              Set-AzVMExtension -ResourceGroupName $VM.ResourceGroupName -VMName $vm.Name -Location $vm.Location -ExtensionType LinuxDiagnostic -Publisher Microsoft.Azure.Diagnostics -Name LinuxDiagnostic -SettingString $publicSettings -ProtectedSettingString $protectedSettings -TypeHandlerVersion 3.0 -asjob
        }
 } 
+#Checks for running Jobs
+$runningJobs = Get-Job
+do {
+	if ($runningJobs.state -contains "Running") {
+		{ "Jobs Still Running" }
+		$runningJobs = Get-Job | Where-Object -Property State -EQ running
+		Start-Sleep -Seconds 60
+	}
+}
+until ($runningJobs.state -notcontains "running")
+
+Get-Job
