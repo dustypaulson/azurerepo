@@ -55,7 +55,11 @@ foreach ($vm in $vms) {
        #Checks for Windows VM that does not contain the diagnostic extension and that it is turned on 
        if ($vm.StorageProfile.OsDisk.OsType -eq "Windows" -and $windowsExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 
-             #Settings to enable for diagnostics
+             
+		#Outputs name of VM we are working with
+            	Write-Output "Working on $($vm.Name)"
+	     
+	     #Settings to enable for diagnostics
              $publicSettings = '{
   "storageAccount": "__DIAGNOSTIC_STORAGE_ACCOUNT__",
   "WadCfg": {
@@ -356,7 +360,11 @@ foreach ($vm in $vms) {
        #Checks for Linux VM that does not contain the diagnostic extension and that it is turned on 
        if ($vm.StorageProfile.OsDisk.OsType -eq "Linux" -and $linuxExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
 
-             #Builds public settings information for metric onboarding 
+             
+		#Outputs name of VM we are working with
+            	Write-Output "Working on $($vm.Name)"
+	     
+	     #Builds public settings information for metric onboarding 
              $publicSettings = "{
   'StorageAccount': '__DIAGNOSTIC_STORAGE_ACCOUNT__',
   'ladCfg': {
