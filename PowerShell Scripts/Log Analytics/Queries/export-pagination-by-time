@@ -1,0 +1,67 @@
+<#
+I have used the count variable to start at zero and be looped 288 times. The reason for this is we are running this script 
+in 5 minute blocks. 24 hours * 60 minutes / 5 minute chunks = 288 chunks. 
+
+The logic is gathering the date as of right now and subtracting 5 minutes from the runtime to create our start date. 
+Out start date is always the time that is farthest in the past.To get 5 minutes in the past we use .AddMinutes(-5)
+
+Once the date and times are created, we run our query. You will want to update "search * | where TimeGenerated" portion.
+Leave the between logic alone as this is what is doing our time comparison for this query
+
+Then the script will output a file to the desktop. Please update the output of Export-CSV. Currently it is pointing to my desktop
+
+Once the file has been outputted it clears the variables, creates new start and end times based on the previous values, and adds +1 to the count. To make sure we have no duplicate data we add 1 millisecond to our originating start time which is the next runs end time.
+
+This process continues to append to the outputted file until the 288 loops have went though. 
+#>
+
+#Count starts at 0, script runs until count is met
+$count = 0
+
+#Gets todays date to start query
+$date = Get-Date
+
+#Goes back six days to start the query
+$dateStart = $date.AddDays(-1)
+
+#Converts time to UTC
+$dateStartUTC = $dateStart.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')
+
+#Uncomment "#$dateEndUTC = $date.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')" to use "Right Now" as the end date
+#$dateEndUTC = $date.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')
+
+#Hardcode in expected stop time if you did not use the "Right Now" $dateEndUTC variable
+$dateEndUTC = "2019-06-18 19:32:59"
+
+do {
+	#Runs Query
+	$queryResults = Invoke-AzOperationalInsightsQuery -WorkspaceId "947c88d2-9b0a-443a-90de-794ccac87311" -Query "AzureActivity | extend ingestionTime = ingestion_time() | where ingestionTime between(datetime($dateStartUTC) .. datetime($dateEndUTC))"
+
+	#Gathers the results of the query
+	$Results = $queryResults.Results
+
+	#I am taking the ingestionTime, counting the results, and grabbing the last result with $count this is the last record and becomes our new End Time.
+	$count = ($Results.ingestionTime.Count) - 1
+
+	#Convert the datatime to string to retrieve correct Log Analytics syntax
+	[datetime]$newEndDate = ($Results.ingestionTime[$count])
+	$newEndDateFormatted = $newEndDate.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')
+	[string]$dateEndUTC = $newEndDateFormatted
+
+	#Export current result set
+	$Results | Export-Csv C:\Users\v-dupau\Desktop\test.csv -Force -NoClobber -NoTypeInformation -Append
+
+	#Create new start date for query
+	$dateStart = $newEndDate.AddDays(-1)
+
+	#Convert to UTC time for Log Analytics syntax
+	$dateStartUTC = $dateStart.ToUniversalTime().ToString('yyyy-MM-dd HH:mm:ss')
+
+	#Add 1 to the count for do until count completion
+	$count++
+
+	#Null out query and results
+	$queryResults = $null
+	$Results = $null
+}
+until ($count -eq 2)
