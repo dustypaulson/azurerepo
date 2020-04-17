@@ -1,0 +1,44 @@
+$doQuery = {
+	param($start,$end)
+	#        $query =  "search * | where Type == 'AzureDiagnostics' and TimeGenerated >= todatetime('$start') and TimeGenerated < todatetime('$end') | sort by TimeGenerated asc"
+	$query = "search * | where Type == 'AzureDiagnostics' and TimeGenerated >= todatetime('$start') and TimeGenerated < todatetime('$end') | sort by TimeGenerated asc | project `$table, TimeGenerated, Type, TenantId, SourceSystem, MG, ManagementGroupName, Computer, errors_s, cacheTime_d, lastError_scope_s, apiRevision_s, lastError_transportErrorCode_d, backendProtocol_s, clientProtocol_s, backendMethod_s, backendUrl_s, productId_s, userId_s, apimSubscriptionId_s, backendResponseCode_d, backendTime_d, requestSize_d, apiId_s, operationId_s, Environment_s, lastError_elapsed_d, clientTime_d, OperationName, Category, CallerIPAddress, location_s, lastError_source_s, lastError_reason_s, lastError_message_s, lastError_section_s, method_s, url_s, cache_s, ResourceId, SubscriptionId, ResourceGroup, ResourceProvider, Resource, ResourceType, CorrelationId, isRequestSuccess_b, Level_d, EventId_d, DurationMs, responseCode_d, responseSize_d, _ResourceId, AlertPriority, AlertSeverity, SourceDisplayName, SourceFullName, AlertId, AlertName, AlertDescription, RepeatCount, AlertState, ResolvedBy, LastModifiedBy, TimeRaised, TimeResolved, TimeLastModified, AlertContext, TicketId, Custom1, Custom2, Custom3, Custom4, Custom5, Custom6, Custom7, Custom8, Custom9, Custom10, AlertUniqueId, QueryExecutionStartTime, QueryExecutionEndTime, Query, RemediationJobId, RemediationRunbookName, AlertRuleId, AlertRuleInstanceId, ThresholdOperator, ThresholdValue, LinkToSearchResults, ServiceDeskConnectionName, ServiceDeskId, ServiceDeskWorkItemLink, ServiceDeskWorkItemType, ResourceValue, RootObjectName, ObjectDisplayName, PriorityNumber, HostName, StateType, AlertTypeDescription, AlertTypeNumber, AlertError, StatusDescription, AlertStatus, TriggerId, Url, ValueDescription, AlertValue, Comments, TemplateId, FlagsDescription, Flags, ValueFlagsDescription, ValueFlags, Expression, Time, SourceComputerId, OperationStatus, Detail, OperationCategory, Solution, HelpLink, OperationKey, ErrorId, StartTime, EndTime, ResourceUri, LinkedResourceUri, DataType, BatchesWithinSla, BatchesOutsideSla, BatchesCapped, TotalBatches, AvgLatencyInSeconds, Quantity, QuantityUnit, IsBillable, MeterId, LinkedMeterId, OperationVersion, ResultType, ResultSignature, ResultDescription, MetricName, Total, Count, Maximum, Minimum, Average, TimeGrain, UnitName, RemoteIPCountry, RemoteIPLatitude, RemoteIPLongitude, MaliciousIP, IndicatorThreatType, Description, TLPLevel, Confidence, Severity, FirstReportedDateTime, LastReportedDateTime, IsActive, ReportReferenceLink, AdditionalInformation"
+
+	Write-Host "Running query: $query"
+	$result = Invoke-AzOperationalInsightsQuery -WorkspaceId "66d041fd-e8a8-473b-b601-3ac79a285971" -Query "$query"
+	Write-Host Done
+
+	Write-Host "Exporting..."
+
+	$time = $start.ToFileTime()
+	foreach ($record in $result.Results) {
+		$record | ConvertTo-Json -Compress >> /data/azure/azure_$time
+	}
+	Write-Host Done
+}
+
+
+$start = Get-Date -Year 2019 -Month 01 -Day 14 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+$finish = Get-Date -Year 2019 -Month 01 -Day 15 -Hour 0 -Minute 0 -Second 0 -Millisecond 0
+$MAX_RECORDS = 30000
+$MAX_THREADS = 5
+while ($lastRecord -lt $finish) {
+	$query = "search * | where Type == 'AzureDiagnostics' and  TimeGenerated >= datetime('$start') | sort by TimeGenerated asc | limit $MAX_RECORDS | sort by TimeGenerated desc | limit 1 | project TimeGenerated"
+	$result = Invoke-AzOperationalInsightsQuery -WorkspaceId "66d041fd-e8a8-473b-b601-3ac79a285971" -Query "$query"
+	$lastRecord = [datetime]$result.Results.TimeGenerated
+
+	Write-Host Starting Job for data: $start - $lastRecord
+	Start-Job -ScriptBlock $doQuery -ArgumentList @($start,$lastRecord)
+	Write-Host All Jobs:
+	Get-Job
+	Remove-Job -State Completed
+	$start = $lastRecord
+
+	$threadCount = @(Get-Job -State Running).Count
+	while ($threadCount -ge $MAX_THREADS) {
+		Start-Sleep -Seconds 10
+		$threadCount = @(Get-Job -State Running).Count
+	}
+}
+
+Write-Host "Waiting for jobs to complete"
+Get-Job | Wait-Job
