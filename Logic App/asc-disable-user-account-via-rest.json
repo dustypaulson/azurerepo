@@ -1,3 +1,5 @@
+//This logic app uses the ASC Alert connector to disable a user account. To use this you will need to configure Parse JSON 2 to get
+//the correct schema. In my case I am pulling out User Name but you will want UPN or Object ID. This was tested with UPN. 
 {
     "definition": {
         "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
