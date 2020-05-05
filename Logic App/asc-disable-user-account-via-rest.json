@@ -1,0 +1,158 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Condition": {
+                "actions": {
+                    "Get_secret": {
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['keyvault']['connectionId']"
+                                }
+                            },
+                            "method": "get",
+                            "path": "/secrets/@{encodeURIComponent('password')}/value"
+                        },
+                        "runAfter": {
+                            "Parse_JSON_2": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "HTTP": {
+                        "inputs": {
+                            "body": {
+                                "accountEnabled": true
+                            },
+                            "headers": {
+                                "Authorization": "@body('Parse_JSON')?['access_token']",
+                                "Content-Type": "application/json"
+                            },
+                            "method": "PATCH",
+                            "uri": "https://graph.microsoft.com/v1.0/users/@{body('Parse_JSON_2')?['ExtendedProperties']?['User Name']}"
+                        },
+                        "runAfter": {
+                            "Parse_JSON": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Http"
+                    },
+                    "HTTP_2": {
+                        "inputs": {
+                            "body": "scope=https://graph.microsoft.com/.default\n&grant_type=client_credentials\n&client_id=c5ae2dd0-1842-42d4-98ac-bf0af72932e9\n&client_secret=@{body('Get_secret')?['value']}",
+                            "headers": {
+                                "Content-Type": "application/x-www-form-urlencoded"
+                            },
+                            "method": "POST",
+                            "uri": "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/v2.0/token"
+                        },
+                        "runAfter": {
+                            "Get_secret": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Http"
+                    },
+                    "Parse_JSON": {
+                        "inputs": {
+                            "content": "@body('HTTP_2')",
+                            "schema": {
+                                "properties": {
+                                    "access_token": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "runAfter": {
+                            "HTTP_2": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ParseJson"
+                    },
+                    "Parse_JSON_2": {
+                        "inputs": {
+                            "content": "@triggerBody()",
+                            "schema": {
+                                "properties": {
+                                    "ExtendedProperties": {
+                                        "properties": {
+                                            "User Name": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "runAfter": {},
+                        "type": "ParseJson"
+                    }
+                },
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@triggerBody()?['AlertDisplayName']",
+                                "Azure Security Center test alert (not a threat)"
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "If"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            },
+            "upn": {
+                "defaultValue": "v-dupau@microsoft.com",
+                "type": "String"
+            }
+        },
+        "triggers": {
+            "When_an_Azure_Security_Center_Alert_is_created_or_triggered": {
+                "inputs": {
+                    "body": {
+                        "callback_url": "@{listCallbackUrl()}"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['ascalert_1']['connectionId']"
+                        }
+                    },
+                    "path": "/Microsoft.Security/Alert/subscribe"
+                },
+                "type": "ApiConnectionWebhook"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "ascalert_1": {
+                    "connectionId": "/subscriptions/fbaa5434-4386-4e71-b45b-0030e15f73f8/resourceGroups/dusty/providers/Microsoft.Web/connections/ascalert",
+                    "connectionName": "ascalert",
+                    "id": "/subscriptions/fbaa5434-4386-4e71-b45b-0030e15f73f8/providers/Microsoft.Web/locations/westus2/managedApis/ascalert"
+                },
+                "keyvault": {
+                    "connectionId": "/subscriptions/fbaa5434-4386-4e71-b45b-0030e15f73f8/resourceGroups/dusty/providers/Microsoft.Web/connections/keyvault",
+                    "connectionName": "keyvault",
+                    "id": "/subscriptions/fbaa5434-4386-4e71-b45b-0030e15f73f8/providers/Microsoft.Web/locations/westus2/managedApis/keyvault"
+                }
+            }
+        }
+    }
+}
