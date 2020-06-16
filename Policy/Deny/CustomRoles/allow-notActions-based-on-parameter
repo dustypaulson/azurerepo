@@ -1,49 +1,53 @@
 {
-    "properties": {
-      "displayName": "allow-notActions-based-on-parameter",
-      "policyType": "Custom",
-      "mode": "All",
-      "parameters": {
-        "effect": {
-          "type": "String",
-          "metadata": {
-            "displayName": "Effect",
-            "description": "Deny policy or disable policy"
-          },
-          "defaultValue": "Deny"
+  "properties": {
+    "displayName": "allow-notActions-based-on-parameter",
+    "policyType": "Custom",
+    "mode": "All",
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Deny policy or disable policy"
         },
-        "notActions": {
-          "type": "Array",
-          "metadata": {
-            "displayName": "List of notActions allowed for custom role",
-            "description": "Array of permissions to add to notActions. When entering parameters in the portal add the permissions without the double quotes seperated by a comma. Also make sure there are not trailing or leading white spaces - Ex Microsoft.Authorization/elevateAccess/Action. Also case sensitive"
-          }
-        }
+        "defaultValue": "Deny"
       },
-      "policyRule": {
-        "if": {
-          "allOf": [
-            {
-              "field": "type",
-              "equals": "Microsoft.Authorization/roleDefinitions"
-            },
-            {
-              "anyOf": [
-                {
-                  "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')), bool('false'), equals(length(intersection(parameters('notActions'), field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]'))), length(parameters('notActions'))))]",
-                  "equals": false
-                },
-                {
-                  "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')), bool('false'), equals(length(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')),length(parameters('notActions'))))]",
-                  "equals": false
-                }
-              ]
-            }
-          ]
-        },
-        "then": {
-          "effect": "[parameters('effect')]"
+      "notActions": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "List of notActions allowed for custom role",
+          "description": "Array of permissions to add to notActions. When entering parameters in the portal add the permissions without the double quotes seperated by a comma. Also make sure there are not trailing or leading white spaces - Ex Microsoft.Authorization/elevateAccess/Action"
         }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Authorization/roleDefinitions"
+          },
+          {
+            "field": "Microsoft.Authorization/roleDefinitions/type",
+            "equals": "CustomRole"
+          },
+          {
+            "anyOf": [
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')), bool('false'), equals(length(intersection(parameters('notActions'), field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]'))), length(parameters('notActions'))))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')), bool('false'), equals(length(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')),length(parameters('notActions'))))]",
+                "equals": false
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
       }
     }
   }
+}
