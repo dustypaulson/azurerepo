@@ -1,65 +1,77 @@
 {
-    "mode": "all",
-    "policyRule": {
+    "properties": {
+      "displayName": "deploy-secure-transfer-required",
+      "policyType": "Custom",
+      "mode": "All",
+      "parameters": {},
+      "policyRule": {
         "if": {
-            "allOf": [
-                {
-                    "field": "type",
-                    "equals": "Microsoft.Storage/storageAccounts"
-                },
-                {
-                    "not": {
-                        "field": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly",
-                        "equals": "True"
-                    }
-                }
-            ]
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Storage/storageAccounts"
+            },
+            {
+              "not": {
+                "field": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly",
+                "equals": "True"
+              }
+            }
+          ]
         },
         "then": {
-            "effect": "deployIfNotExists",
-            "details": {
-                "type": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly",
-                "roleDefinitionIds": [
-                    "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
-                ],
-                "deployment": {
-                    "properties": {
-                        "mode": "incremental",
-                        "template": {
-                            "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
-                            "contentVersion": "1.0.0.0",
-                            "parameters": {
-                                "storageAccountName": {
-                                    "type": "String"
-                                },
-                                "location": {
-                                    "type": "String"
-                                }
-                            },
-                            "resources": [
-                                {
-                                    "type": "Microsoft.Storage/storageAccounts",
-                                    "location": "[parameters('location')]",
-                                    "name": "[parameters('storageAccountName')]",
-                                    "apiVersion": "2019-04-01",
-                                    "properties": {
-                                        "supportsHttpsTrafficOnly": "true"
-                                    }
-                                }
-                            ]
-                        },
-                        "parameters": {
-                            "storageAccountName": {
-                                "value": "[field('name')]"
-                            },
-                            "location": {
-                                "value": "[field('location')]"
-                            }
-                        }
-                    }
+          "effect": "deployIfNotExists",
+          "details": {
+            "type": "Microsoft.Storage/storageAccounts",
+            "existenceCondition": {
+              "allOf": [
+                {
+                  "field": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly",
+                  "equals": "true"
                 }
+              ]
+            },
+            "roleDefinitionIds": [
+              "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+            ],
+            "deployment": {
+              "properties": {
+                "mode": "incremental",
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+                  "contentVersion": "1.0.0.0",
+                  "parameters": {
+                    "storageAccountName": {
+                      "type": "String"
+                    },
+                    "location": {
+                      "type": "String"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Storage/storageAccounts",
+                      "location": "[parameters('location')]",
+                      "name": "[parameters('storageAccountName')]",
+                      "apiVersion": "2019-04-01",
+                      "properties": {
+                        "supportsHttpsTrafficOnly": "true"
+                      }
+                    }
+                  ]
+                },
+                "parameters": {
+                  "storageAccountName": {
+                    "value": "[field('name')]"
+                  },
+                  "location": {
+                    "value": "[field('location')]"
+                  }
+                }
+              }
             }
+          }
         }
-    },
-    "parameters": {}
-}
+      }
+    }
+  }
