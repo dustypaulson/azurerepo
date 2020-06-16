@@ -1,0 +1,55 @@
+{
+    "properties": {
+        "displayName": "dusty-allow-role-name-based-on-parameter",
+        "policyType": "Custom",
+        "mode": "All",
+        "parameters": {
+            "effect": {
+                "type": "String",
+                "metadata": {
+                    "displayName": "Effect",
+                    "description": "Deny policy or disable policy"
+                },
+                "defaultValue": "Deny"
+            },
+            "customName": {
+                "type": "Array",
+                "metadata": {
+                    "displayName": "customName",
+                    "description": "Name of allowed custom role name. All other names will fail policy."
+                }
+            }
+        },
+        "policyRule": {
+            "if": {
+                "allOf": [
+                    {
+                        "field": "type",
+                        "equals": "Microsoft.Authorization/roleDefinitions"
+                    },
+                    {
+                        "not": {
+                            "field": "Microsoft.Authorization/roleDefinitions/roleName",
+                            "in": "[array(parameters('customName'))]"
+                        }
+                    },
+                    {
+                        "anyOf": [
+                            {
+                                "field": "Microsoft.Authorization/roleDefinitions/type",
+                                "equals": "CustomRole"
+                            },
+                            {
+                                "field": "Microsoft.Authorization/roleDefinitions/type",
+                                "exists": "false"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "then": {
+                "effect": "[parameters('effect')]"
+            }
+        }
+    }
+}
