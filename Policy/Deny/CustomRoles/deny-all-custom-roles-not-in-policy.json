@@ -1,0 +1,227 @@
+{
+  "properties": {
+    "displayName": "dusty-custom-role-working",
+    "policyType": "Custom",
+    "mode": "All",
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Deny policy or disable policy"
+        },
+        "defaultValue": "Deny"
+      },
+      "customName1": {
+        "type": "String",
+        "metadata": {
+          "displayName": "customName1",
+          "description": "Name of allowed custom role name. All other names will fail policy."
+        }
+      },
+      "actions1": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "List of Actions1 allowed for custom role",
+          "description": "Array of permissions to add to actions1. When entering parameters in the portal add the permissions without the double quotes seperated by a comma. Also make sure there are not trailing or leading white spaces - Ex Microsoft.Authorization/elevateAccess/Action"
+        }
+      },
+      "notActions1": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "List of notActions1 allowed for custom role",
+          "description": "Array of permissions to add to notActions1. When entering parameters in the portal add the permissions without the double quotes seperated by a comma. Also make sure there are not trailing or leading white spaces - Ex Microsoft.Authorization/elevateAccess/Action"
+        }
+      },
+      "customName2": {
+        "type": "String",
+        "metadata": {
+          "displayName": "customName2",
+          "description": "Name of allowed custom role name. All other names will fail policy."
+        }
+      },
+      "actions2": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "List of Actions2 allowed for custom role",
+          "description": "Array of permissions to add to actions2. When entering parameters in the portal add the permissions without the double quotes seperated by a comma. Also make sure there are not trailing or leading white spaces - Ex Microsoft.Authorization/elevateAccess/Action"
+        }
+      },
+      "notActions2": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "List of notActions2 allowed for custom role",
+          "description": "Array of permissions to add to notActions2. When entering parameters in the portal add the permissions without the double quotes seperated by a comma. Also make sure there are not trailing or leading white spaces - Ex Microsoft.Authorization/elevateAccess/Action"
+        }
+      },
+      "customName3": {
+        "type": "String",
+        "metadata": {
+          "displayName": "customName3",
+          "description": "Name of allowed custom role name. All other names will fail policy."
+        }
+      },
+      "actions3": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "List of actions3 allowed for custom role",
+          "description": "Array of permissions to add to actions3. When entering parameters in the portal add the permissions without the double quotes seperated by a comma. Also make sure there are not trailing or leading white spaces - Ex Microsoft.Authorization/elevateAccess/Action"
+        }
+      },
+      "notActions3": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "List of notActions3 allowed for custom role",
+          "description": "Array of permissions to add to notActions3. When entering parameters in the portal add the permissions without the double quotes seperated by a comma. Also make sure there are not trailing or leading white spaces - Ex Microsoft.Authorization/elevateAccess/Action"
+        }
+      },
+      "customName4": {
+        "type": "String",
+        "metadata": {
+          "displayName": "customName4",
+          "description": "Name of allowed custom role name. All other names will fail policy."
+        }
+      },
+      "actions4": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "List of actions4 allowed for custom role",
+          "description": "Array of permissions to add to actions4. When entering parameters in the portal add the permissions without the double quotes seperated by a comma. Also make sure there are not trailing or leading white spaces - Ex Microsoft.Authorization/elevateAccess/Action"
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Authorization/roleDefinitions"
+          },
+          {
+            "anyOf": [
+              {
+                "field": "Microsoft.Authorization/roleDefinitions/type",
+                "equals": "CustomRole"
+              },
+              {
+                "field": "Microsoft.Authorization/roleDefinitions/type",
+                "exists": "false"
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')), bool('false'), equals(length(intersection(parameters('notActions1'), field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]'))), length(parameters('notActions1'))))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')), bool('false'), equals(length(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')),length(parameters('notActions1'))))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')), bool('false'), equals(length(intersection(parameters('actions1'), field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]'))), length(parameters('actions1'))))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')), bool('false'), equals(length(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')),length(parameters('actions1'))))]",
+                "equals": false
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "Microsoft.Authorization/roleDefinitions/roleName",
+                    "notEquals": "[parameters('customName1')]"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')), bool('false'), equals(length(intersection(parameters('notActions2'), field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]'))), length(parameters('notActions2'))))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')), bool('false'), equals(length(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')),length(parameters('notActions2'))))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')), bool('false'), equals(length(intersection(parameters('actions2'), field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]'))), length(parameters('actions2'))))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')), bool('false'), equals(length(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')),length(parameters('actions2'))))]",
+                "equals": false
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "Microsoft.Authorization/roleDefinitions/roleName",
+                    "notEquals": "[parameters('customName2')]"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')), bool('false'), equals(length(intersection(parameters('notActions3'), field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]'))), length(parameters('notActions3'))))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')), bool('false'), equals(length(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')),length(parameters('notActions3'))))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')), bool('false'), equals(length(intersection(parameters('actions3'), field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]'))), length(parameters('actions3'))))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')), bool('false'), equals(length(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')),length(parameters('actions3'))))]",
+                "equals": false
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "Microsoft.Authorization/roleDefinitions/roleName",
+                    "notEquals": "[parameters('customName3')]"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].notActions[*]')), bool('true'), bool('false'))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')), bool('false'), equals(length(intersection(parameters('actions4'), field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]'))), length(parameters('actions4'))))]",
+                "equals": false
+              },
+              {
+                "value": "[if(empty(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')), bool('false'), equals(length(field('Microsoft.Authorization/roleDefinitions/permissions[*].actions[*]')),length(parameters('actions4'))))]",
+                "equals": false
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "Microsoft.Authorization/roleDefinitions/roleName",
+                    "notEquals": "[parameters('customName4')]"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    }
+  }
+}
