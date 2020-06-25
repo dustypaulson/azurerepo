@@ -51,7 +51,7 @@ foreach ($vm in $vms) {
        $status = Get-AzVM -ResourceGroupName $vm.ResourceGroupName -Name $vm.Name -Status
 
        #Checks for Linux VM that does not contain the diagnostic extension and that it is turned on 
-       if ($vm.StorageProfile.OsDisk.OsType -eq "Linux" -and $linuxExtensionCheck -eq $null -and $status.Statuses.displaystatus -contains "VM Running") {
+       if ($vm.StorageProfile.OsDisk.OsType -eq "Linux" -and $linuxExtensionCheck -ne $null -and $status.Statuses.displaystatus -contains "VM Running") {
 
              
 	     #Outputs name of VM we are working with
