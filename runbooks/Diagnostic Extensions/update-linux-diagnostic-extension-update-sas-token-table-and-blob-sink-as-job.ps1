@@ -41,7 +41,7 @@ $storageLocation = $sa.Location
 #Gets VM Object information in the same region as the storage account
 $VMs = Get-AzVM | Where-Object { $_.Location -eq $storageLocation }
 foreach ($vm in $vms) {
-       #Nulls the variables used to check if Windows or Linux
+       #Nulls the variables used to check if Linux
        $linuxExtensionCheck = $null
 
        #Checks if diagnostic extension is currently installed
@@ -75,7 +75,6 @@ foreach ($vm in $vms) {
 	     
 	      #Cleans up variables to save on socket limitation
              	Remove-Variable linuxExtensionCheck -Force -Confirm:$false
-		Remove-Variable windowsExtensionCheck -Force -Confirm:$false
 		Remove-Variable status -Force -Confirm:$false
 		Remove-Variable vm -Force -Confirm:$false
 		if ($sa -ne $null) {Remove-Variable sa -Force -Confirm:$false}
