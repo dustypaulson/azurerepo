@@ -1,0 +1,95 @@
+Create Azure Resources
+1.	Create resources in the Azure portal
+a.	Forensics Virtual Machine - Windows
+i.	Name Virtual Machine - forensicboxx
+1.	2 data disks attached to contain memory capture tool and vhd download
+a.	In proof of concept we used 1TB premium SSD disks
+b.	Name data disk - memcap
+c.	Name data disk - vhdfiles
+b.	Linux Virtual Machine to configure tools disk
+i.	Name does not matter as we are only using this VM to setup the data disk
+1.	1 data disk to contain memory capture tool
+a.	Name data disk – memcap-Linux
+c.	Forensics storage account
+i.	Name storage account - cdcforensicsa
+1.	Create two containers in storage account
+a.	Name container - forensicscript
+b.	Name container – forensicvhdfiles
+d.	Create Key Vault
+i.	Name key vault – CdcKV
+ii.	Do not create secret yet. This will come during the creation of the Service Principal
+e.	Create resource group with naming convention  CDC_Forensics_<SUBSCRIPTION_NAME> in every subscription that could be attacked.
+Configure Forensic virtual machine
+1.	Log into the Windows Forensic Virtual Machine – make sure RDP is open on the NSG
+a.	Setup data disks
+i.	Partition memcap disk using all the allotted space
+ii.	Name the drive – MemCap
+iii.	Partition vhdfiles disk using all the allotted space
+iv.	Name the drive – vhdFiles
+b.	Install Encase
+i.	See Ryan Kloman for installation instructions
+c.	Download Disk Internals Linux Reader to be able to read memory files from Linux machines
+i.	Link here
+d.	Place Memory.ps1 and VHD.ps1 scripts on the desktop of the cdc user or on the C drive if not using a shared identity
+e.	Detach memcap disk from Azure Portal
+Configure Linux Data Disk That contains Memory Capture Tool
+1.	Log into the Linux box you created – make sure SSH is open on the NSG
+a.	Run sudo su -
+i.	Sets user as root
+b.	Run blkid
+i.	Look for newly attached disk
+ii.	If no other disks have been attached this is usually sdc1
+iii.	Going forward we will assume the new disk is sdc1. If it is not please update the commands below
+c.	Run the below to partition the disk
+i.	mkdir /mnt/sdc1
+ii.	mount /dev/sdc1/mnt/sdc1
+iii.	fdisk /dev/sdc1
+iv.	n
+v.	p
+vi.	default [Enter]
+vii.	default [Enter]
+viii.	default [Enter]
+ix.	w
+x.	mkfs -t ext4 /dev/sdc1
+xi.	mkdir /mnt/sdc1
+xii.	mount /dev/sdc1 /mnt/sdc1
+xiii.	cd /mnt/sdc1
+xiv.	wget -O ubuntu.tar.gz https://ad-zip.s3.amazonaws.com/ftkimager.3.1.1_ubuntu64.tar.gz
+xv.	tar -xf ubuntu.tar.gz
+xvi.	e2label /dev/sdc1 FORENSICS
+xvii.	Umount /dev/sdc1 /mnt/forensics 
+d.	Detach data disk from Linux virtual machine
+e.	Delete Linux Virtual Machine
+
+Add Scripts To Storage Container
+1.	Place scripts into storage account cdcforensicsa within container forensicscript folder
+a.	memCap.ps1
+b.	memcap-Linux.sh
+Create Service Principal Identity
+1.	Open Azure AD
+2.	Click App Registrations
+3.	Click + New registration
+a.	Give the service principal a name
+b.	Choose the first radio button for single tenant
+c.	Click register
+4.	Wait for SPN creation to finish
+5.	Click on Certificates & secrets
+a.	Click + New client secret
+b.	Give the secret a description
+c.	Set the expiration date according and update any documentation to add SPN to list of accounts that needs secrets/passwords updates
+d.	Click Add
+e.	Copy the value of the new secret
+f.	Navigate to the Key Vault named CdcKV
+g.	Click Secrets
+h.	Click Generate/Import
+i.	Name the secret – spnpw
+j.	Enter the SPN secret as the value
+k.	Set expiration if necessary
+l.	Click create
+Add Custom Role To Environment And Assign SPN Identity To Role
+1.	In all cases below make sure to update the variables necessary
+a.	Running in 1 sub
+i.	Subscription ID, SPN Name
+b.	Running in all subs
+i.	
+2.	If running for one subscription run the code entitled One Subscription Below
