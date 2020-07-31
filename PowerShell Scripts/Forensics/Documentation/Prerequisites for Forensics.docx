@@ -1,0 +1,85 @@
+Prerequisites for Forensics
+•	Storage Account with two containers. One for scripts and one for VHD files
+o	https://docs.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal
+•	Service principal account that has the appropriate rights to read and retrieve the keys for the forensics storage account as well as download data.
+•	Create Service principal application secret
+o	https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal
+•	KeyVault with the secret for the SPN entered. Whatever account runs the script will need access to the keys within KeyVault
+o	https://docs.microsoft.com/en-us/azure/key-vault/quick-create-portal
+•	Resource group for created items to land so the delete permissions for RBAC can be applied at the RG level not at the root level. Only delete permissions at root level will be vm extension delete permissions.
+Data to have for static variables during runtime and variables it maps to in script
+SPN Application ID - $userName
+SPN Password that you create – Entered in Key Vault and programmatically acquired during script run
+KeyVault name - $keyVaultName
+KeyVault password name - when entering a secret into KeyVault you will create a new entry and the name of that entry is needed - $keyVaultSecretName
+Subscription ID of forensics subscription - $forensicsSubscriptionID
+Resource group name for forensics subscription - $forensicsVMResourceGroup
+Forensics VM Name - $forensicsVMName
+Forensics Storage Account Name - $forensicSAName
+Storage Container Name that contain memory capture scripts- $forensicsScriptSAContainer
+Storage Container Name that allows for transfer of VHD files – storageVHDContaine- rName
+Amount of time to extract VHD files from managed disks - $sasExpiryDuration
+Storage Account Prefix for newly created storage account to match attacked VM region - $saPrefix
+Tenant ID - $tenantId
+Windows Memory Capture Script name - $memCapScript
+Linux Memory Capture script name - $memCapScriptLinux
+Variables to enter at run time - This call all be gathered from the overview blade of the attacked VM
+Resource group of attacked VM -  $attackedVMResourceGroupName
+Attacked VM subscription ID -  $attackedSubscriptionID 
+
+Attacked VM Name -  $attackedVMName
+
+Static data to enter in scripts – VHD Capture Parent
+•	$driveLetter = (Get-Volume | Where-Object { $_.FileSystemLabel -eq "vhdFiles" }).DriveLetter + ":/"
+o	vhdFiles is the name of the disk you want to download the VHD file to. In the example below vhdFiles would be replaced with OSDisk
+o	The disk should be large enough to hold the VHD files you plan to capture
+o	 
+Static data to enter in scripts – Memory capture windows child
+o	$memCapDrive = Get-PSDrive | Where-Object Description -EQ MemCap
+o	MemCap is the name of the disk you want to download the VHD file to. In the example below MemCap would be replaced with OSDisk
+o	This disk should be large enough to hold all data downloaded to it including all memory capture files
+o	 
+
+
+How to build the Linux tools disk
+#Attach new disk to Linux VM
+attach disk to Linux vm
+#Makes current user root
+sudo su –
+#Make the mount directory
+mkdir /mnt/diskname
+#Mount disk to new mount point
+mount /dev/diskname /mnt/diskname
+#Partition new disk
+fdisk /dev/diskname
+#Type the letters below on each screen 
+n
+p
+default [hit enter]
+default [hit enter]
+default [hit enter]
+w
+#Creates ex4 partition
+mkfs -t ext4 /dev/sdc1
+#Make directory
+mkdir /mnt/sdc1
+#Mount disk to directory
+mount /dev/sdc1 /mnt/sdc1
+#Change directory to new directory
+cd /mnt/sdc1
+#Get ftkimager CLI version
+wget -O ubuntu.tar.gz https://ad-zip.s3.amazonaws.com/ftkimager.3.1.1_ubuntu64.tar.gz
+#Extract forensics file
+tar -xf ubuntu.tar.gz
+#Set label to Forensics as the Linux automation script will reach the disk NAMED Forensics
+e2label /dev/sdc1 FORENSICS
+# when done unmount disk and detach from VM – This is a static resource that needs to be in the forensics resource group not attached to the VM
+How to build the Windows disks
+#Attach disk to VM
+Create new disk and attach to Windows VM
+#Partition new disk
+Open disk management (diskmgmt.msc) and find the drive that is unallocated
+Create new drive allocating all space to the disk
+Make sure to name the disk memcap as that is what the forensics script expects
+	If this is for the VHD capture disk name it vhdFiles
+#Detach memcap disk and keep in resource group as this will move to the attacked vm subscription to run the tool on the machine, leave vhdfiles disk attached as this is the directory the vhd capture script will download the vhd file to
