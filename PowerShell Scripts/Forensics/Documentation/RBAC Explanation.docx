@@ -1,0 +1,41 @@
+Explanation of why each permission needs to be added
+This should be broken into two roles. One that has delete permissions for everything except VM Extensions applied to the RG created for this purpose in each subscription. The rest of the permissions should be at the root tenant layer. 
+#Add storage role actions
+$role.Actions.Add("Microsoft.Storage/storageAccounts/read")
+$role.Actions.Add("Microsoft.Storage/storageAccounts/write")
+$role.Actions.Add("Microsoft.Storage/storageAccounts/delete")
+$role.Actions.Add("Microsoft.Storage/storageAccounts/listkeys/action")
+$role.Actions.Add("Microsoft.Storage/storageAccounts/blobServices/write")
+$role.Actions.Add("Microsoft.Storage/storageAccounts/blobServices/containers/write")
+
+Within the VHD capture and Memory Capture scripts there is a heavy reliance on storage accounts to transfer the underlying VHD files from the Microsoft managed storage account to a storage account to match the region of either the attacked VM or the Forensics VM. Due to this need we will need to read, write, delete, and list keys for storage accounts. 
+
+1.	We need read permissions to get the Storage Account Object we will be working with. 
+2.	We need write permissions so we can create a temporary storage account that matches the Attacked VM. This will allow for a disk to be created in the same region as the attacked VM.
+3.	We need delete permissions to clean up the temporary storage account that is created for regional pairing.
+4.	We need to allow for keys to be listed so we can place the underlying .VHD files into the storage container necessary
+5.	We need blobServices Write action so we can add our VHD file to the correct container
+6.	We need Containers Write permissions to create the container in the temporary storage account
+
+#Add Compute permissions
+$role.Actions.Add("Microsoft.Compute/snapshots/*")
+$role.Actions.Add("Microsoft.Compute/virtualMachines/read")
+$role.Actions.Add("Microsoft.Compute/virtualMachines/write")
+$role.Actions.Add("Microsoft.Compute/virtualMachines/extensions/*")
+$role.Actions.Add("Microsoft.Compute/disks/*")
+
+Within the VHD Capture and Memory Capture scripts we have a heavy reliance on disks being create/moved into specific regions to match the Attacked VM. We also need to allow for all snapshot related actions so we can read, create, and delete the snapshots of the Attacked VM to extract the VHD file for investigation.
+
+1.	We need all snapshot permissions to create a snapshot that will be used to extract the underlying VHD file of the Attacked VM to transfer to Forensics VM for investigation. Then delete the snapshot as it is no longer needed.
+2.	We need VM read permissions to get the state of the VM and use its properties for regional pairing and disk creation.
+3.	We need VM write permissions to update the VM when attaching disks.
+4.	We need all permissions of the VM extensions so we can run custom script extensions and remove custom script extensions when completed.
+5.	We need all permissions for the disks so we can create, extract, read, and delete disks as necessary during the process and for necessary cleanup for future runs of the script.
+
+#Add Network Permissions
+$role.Actions.Add("Microsoft.Network/networkInterfaces/join/action")
+ 
+When adding a disk to a VM it needs to run and update command. This command will also touch the NIC of the VM as it could potentially be updated during the update VM commands that are necessary to attach disks. I tested without this permission and got a failure while attaching the disk.
+
+1.	We need the network interface join permissions while doing a VM update as there is a potential that the NIC may have been updated during the VM update. 
+
