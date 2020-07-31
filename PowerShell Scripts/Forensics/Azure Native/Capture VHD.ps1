@@ -43,25 +43,31 @@ mkdir "C:\forensicsLog\vhdCapture" -Force
 #Connect Azure Account
 $connectionCheck = Connect-AzAccount
 
-#Creates log file for account verification
-$connectionCheck | Out-File "C:\forensicsLog\vhdCapture\vhdCapture_$(Get-Date -Format "MM-dd-yyyy_hh-mm-ss-ms").log"
+#Time Stamp
+$Timestamp = $(Get-Date -Format "MM-dd-yyyy_hh-mm-ss-ms")
 
-$attackedVMResourceGroupName = "Dusty-AD"
-$attackedSubscriptionID = "269534e1-06c0-4ee8-a816-0d41a7dee672"
-$attackedVMName = "adVM"
+#Creates log file for account verification
+$logFileName = "C:\forensicsLog\vhdCapture\vhdCapture.csv"
+
+$attackedVMResourceGroupName = "Dusty"
+$attackedSubscriptionID = "1a0a3f26-c387-4204-891e-be296382e9d2"
+$attackedVMName = "attackedvm2"
 $forensicsVMName = "forensicsVM"
 
 #Forensics Resource Group Name
-$forensicsVMResourceGroup = "Dusty"
+$forensicsVMResourceGroup = "Dusty-Forensics"
 
 #Forensics Subscription ID
-$forensicsSubscriptionID = "269534e1-06c0-4ee8-a816-0d41a7dee672"
+$forensicsSubscriptionID = "ba1f7dcc-89de-4858-9f8b-b2ad61c895b5"
 
 #Provide storage account name where you want to copy the underlying VHD of the managed disk. 
-$storageAccountName = "dustytest123"
+$storageAccountName = "dustyforensicstest"
 
 #Name of the storage container where the downloaded VHD will be stored
 $storageVHDContainerName = "forensicvhdfiles"
+
+#Container for logs
+$logContainer = "forensicauditlog"
 
 #Provide Shared Access Signature (SAS) expiry duration in seconds e.g. 86400 Seconds.
 #Know more about SAS here: https://docs.microsoft.com/en-us/Az.Storage/storage-dotnet-shared-access-signature-part-1
@@ -84,31 +90,43 @@ $storageAccountKey = (Get-AzStorageAccountKey -ResourceGroupName $storageAccount
 
 #Selects the subscription of the attacked VM
 Write-Output "Change subscription to Attacked VM Subscription"
-Select-AzSubscription -SubscriptionId $attackedSubscriptionID
+$subName = Select-AzSubscription -SubscriptionId $attackedSubscriptionID
+
+#Get RG to place newly created items
+$rg = Get-AzResourceGroup | where {$_.ResourceGroupName -eq "CDC_Forensics_$($subName.Subscription.Name)"}
+
+#Get the Attacked VM object
+Write-Output "Getting Attacked VM information"
+$attackedVM = Get-AzVM -ResourceGroupName $attackedVMResourceGroupName -Name $attackedVMName
+
+#Create log files for memcap
+$jobvalue = [pscustomobject]@{
+       Account = $connectionCheck.Context.Account.id
+       AttackedVM = $attackedVM.Name
+       AttackedVMSubID = $attackedVM.id.Split("/")[2]
+    AttackedVMRG = $attackedVM.ResourceGroupName
+    TimeStamp = $Timestamp
+}
+
+$jobvalue | Export-Csv -LiteralPath $logFileName -Append -NoClobber -NoTypeInformation -Force -Confirm:$false
+
+#Upload Log to Storage Account
+Set-AzStorageBlobContent -File $logFileName -Container $logContainer -blob ($($logFileName.Split("\")[2]) + '\' + $($logFileName.Split("\")[3])) -Context $storageAccount.Context -Force
 
 #Get the Attacked VM object
 Write-Output "Getting Attacked VM information"
 $attackedVM = Get-AzVM -ResourceGroupName $attackedVMResourceGroupName -Name $attackedVMName -Status
 
-#Output log file with data below
-$jobvalue = [pscustomobject]@{
-	Account = $connectionCheck.Context.Account.id
-	AttackedVM = $attackedVM.Name
-	AttackedVMSubID = $attackedVM.id.Split("/")[2]
-    AttackedVMRG = $attackedVM.ResourceGroupName
-}
-
-#Starts Attacked VM if not started
-Write-Output "Starting Attacked VM if stopped"
 #If attacked VM is off stop script and alert user with message
-Write-Output "Starting Attacked VM if stopped"
+Write-Output "Checking if $attackedVMName is powered on."
 if ($attackedVM.Statuses.DisplayStatus -contains "VM deallocated" -or $attackedVM.Statuses.DisplayStatus -contains "VM stopped")
 {
-	Write-Host "The VM $attackedVMName is currently deallocated. No memory capture possible"
+	Write-Host "The VM $attackedVMName is currently deallocated. Please turn on VM"
 	break
 }
 else { Write-Host "$attackedVMName is currently running" }
 
+#Get attacked vm without powerstate
 $attackedVM = Get-AzVM -ResourceGroupName $attackedVMResourceGroupName -Name $attackedVMName
 
 #Provide the managed disk name 
@@ -123,11 +141,11 @@ $destinationVHDFileName = $attackedVM.StorageProfile.OsDisk.Name + ".vhd"
 Write-Output "Creating snapshot of Attacked VM for VHD extraction"
 $snapshotname = $attackedVM.Name + "snapshot"
 $snapshot = New-AzSnapshotConfig -SourceUri $attackedVM.StorageProfile.OsDisk.ManagedDisk.Id -Location $attackedVM.Location -CreateOption Copy
-New-AzSnapshot -SnapshotName $snapshotname -ResourceGroupName $attackedVM.ResourceGroupName -Snapshot $snapshot
+New-AzSnapshot -SnapshotName $snapshotname -ResourceGroupName $rg.ResourceGroupName -Snapshot $snapshot
 
 #Generate the SAS for the managed disk 
 Write-Output "Generating SAS token for managed disk to extract VHD"
-$sas = Grant-AzSnapshotAccess -ResourceGroupName $attackedVM.ResourceGroupName -SnapshotName $snapshotname -Access Read -DurationInSecond $sasExpiryDuration
+$sas = Grant-AzSnapshotAccess -ResourceGroupName $rg.ResourceGroupName -SnapshotName $snapshotname -Access Read -DurationInSecond $sasExpiryDuration
 
 #Create the context of the storage account where the underlying VHD of the managed disk will be copied
 Write-Output "Creating destination context for VHD to be placed in Forensics Storage Account"
@@ -169,7 +187,7 @@ Write-Output "It took the VHD file $vhdruntime to export to the storage account 
 
 #Remove access to VHD file from managed disk
 Write-Output "Revoking access to VHD file on managed disk"
-Revoke-AzSnapshotAccess -ResourceGroupName $attackedVM.ResourceGroupName -SnapshotName $snapshotname -Confirm:$false
+Revoke-AzSnapshotAccess -ResourceGroupName $rg.ResourceGroupName -SnapshotName $snapshotname -Confirm:$false
 Write-Output "VHD Access Revoked"
 
 #Copy blob to vhd file disk. Creates a new directory if the chd file already exists. Will not save two copies.
@@ -192,13 +210,13 @@ Remove-AzStorageBlob -Blob $destinationVHDFileName -Container $storageVHDContain
 
 try
 {
-	Remove-AzSnapshot -ResourceGroupName $attackedVM.ResourceGroupName -SnapshotName $snapshotname -Force -ErrorAction Stop
+	Remove-AzSnapshot -ResourceGroupName $rg.ResourceGroupName -SnapshotName $snapshotname -Force -ErrorAction Stop
 }
 catch
 {
 	Write-Output "Disk still has sas access"
-	Revoke-AzSnapshotAccess -ResourceGroupName $attackedVM.ResourceGroupName -SnapshotName $snapshotname -Confirm:$false
-	Remove-AzSnapshot -ResourceGroupName $attackedVM.ResourceGroupName -SnapshotName $snapshotname -Force -ErrorAction Stop
+	Revoke-AzSnapshotAccess -ResourceGroupName $rg.ResourceGroupName -SnapshotName $snapshotname -Confirm:$false
+	Remove-AzSnapshot -ResourceGroupName $rg.ResourceGroupName -SnapshotName $snapshotname -Force -ErrorAction Stop
 }
 
 #Script admin tasks
