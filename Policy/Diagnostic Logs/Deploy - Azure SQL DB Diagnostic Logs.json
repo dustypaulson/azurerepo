@@ -1,6 +1,6 @@
 {
   "properties": {
-    "displayName": "Azure SQL DB Diagnostic Logs",
+    "displayName": "Deploy - Azure SQL DB Diagnostic Logs",
     "policyType": "Custom",
     "mode": "Indexed",
     "parameters": {
