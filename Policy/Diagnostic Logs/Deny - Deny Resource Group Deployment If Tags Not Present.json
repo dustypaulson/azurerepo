@@ -1,0 +1,133 @@
+{
+  "properties": {
+    "displayName": "Deny - Deny Resource Group Deployment If Tags Not Present",
+    "policyType": "Custom",
+    "mode": "All",
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Resources/subscriptions/resourceGroups"
+          },
+          {
+            "anyOf": [
+              {
+                "field": "tags[APPLICATION LAYER]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[DIVISION]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[BUSINESS UNIT]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[DEPARTMENT]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[COST CENTER]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[APPLICATION CATEGORY]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[ASSET GROUP]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[ASSET OWNER]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[ASSET CATEGORY]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[ASSET NAME]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[CREATEDBY]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[BSO]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[TSO]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[SITECODE]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[REGION]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[COUNTRY]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[ENVIRONMEN​T]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[ASSET ADMINISTRATOR]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[DISTRIBUTION LIST]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[BACKUP]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[PRODUCT MANAGER]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[ADMIN SECURITYGROUP]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[EXTERNAL FACING]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[SYSTEM TYPE]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[PIIINFORMATION]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[DATATYPE]",
+                "exists": "false"
+              },
+              {
+                "field": "tags[CMDBREFERENCE]",
+                "exists": "false"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}
