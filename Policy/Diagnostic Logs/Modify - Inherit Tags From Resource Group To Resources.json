@@ -1,0 +1,271 @@
+{
+  "properties": {
+    "displayName": "Modify - Inherit Tags From Resource Group To Resources",
+    "policyType": "Custom",
+    "mode": "All",
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "anyOf": [
+          {
+            "field": "type",
+            "Equals": "Microsoft.Network/frontdoorwebapplicationfirewallpolicies"
+          },
+          {
+            "field": "type",
+            "Equals": "Microsoft.Network/firewallPolicies"
+          },
+          {
+            "field": "tags[DIVISION]",
+            "notEquals": "[resourcegroup().tags['DIVISION']]"
+          },
+          {
+            "field": "tags[BUSINESS UNIT]",
+            "notEquals": "[resourcegroup().tags['BUSINESS UNIT']]"
+          },
+          {
+            "field": "tags[DEPARTMENT]",
+            "notEquals": "[resourcegroup().tags['DEPARTMENT']]"
+          },
+          {
+            "field": "tags[COST CENTER]",
+            "notEquals": "[resourcegroup().tags['COST CENTER']]"
+          },
+          {
+            "field": "tags[APPLICATION CATEGORY]",
+            "notEquals": "[resourcegroup().tags['APPLICATION CATEGORY']]"
+          },
+          {
+            "field": "tags[ASSET GROUP]",
+            "notEquals": "[resourcegroup().tags['ASSET GROUP']]"
+          },
+          {
+            "field": "tags[ASSET OWNER]",
+            "notEquals": "[resourcegroup().tags['ASSET OWNER']]"
+          },
+          {
+            "field": "tags[ASSET CATEGORY]",
+            "notEquals": "[resourcegroup().tags['ASSET CATEGORY']]"
+          },
+          {
+            "field": "tags[ASSET NAME]",
+            "notEquals": "[resourcegroup().tags['ASSET NAME']]"
+          },
+          {
+            "field": "tags[CREATEDBY]",
+            "notEquals": "[resourcegroup().tags['CREATEDBY']]"
+          },
+          {
+            "field": "tags[BSO]",
+            "notEquals": "[resourcegroup().tags['BSO']]"
+          },
+          {
+            "field": "tags[TSO]",
+            "notEquals": "[resourcegroup().tags['TSO']]"
+          },
+          {
+            "field": "tags[SITECODE]",
+            "notEquals": "[resourcegroup().tags['SITECODE']]"
+          },
+          {
+            "field": "tags[REGION]",
+            "notEquals": "[resourcegroup().tags['REGION']]"
+          },
+          {
+            "field": "tags[COUNTRY]",
+            "notEquals": "[resourcegroup().tags['COUNTRY']]"
+          },
+          {
+            "field": "tags[ENVIRONMEN​T]",
+            "notEquals": "[resourcegroup().tags['ENVIRONMEN​T']]"
+          },
+          {
+            "field": "tags[ASSET ADMINISTRATOR]",
+            "notEquals": "[resourcegroup().tags['ASSET ADMINISTRATOR']]"
+          },
+          {
+            "field": "tags[DISTRIBUTION LIST]",
+            "notEquals": "[resourcegroup().tags['DISTRIBUTION LIST']]"
+          },
+          {
+            "field": "tags[BACKUP]",
+            "notEquals": "[resourcegroup().tags['BACKUP']]"
+          },
+          {
+            "field": "tags[PRODUCT MANAGER]",
+            "notEquals": "[resourcegroup().tags['PRODUCT MANAGER']]"
+          },
+          {
+            "field": "tags[ADMIN SECURITYGROUP]",
+            "notEquals": "[resourcegroup().tags['ADMIN SECURITYGROUP']]"
+          },
+          {
+            "field": "tags[EXTERNAL FACING]",
+            "notEquals": "[resourcegroup().tags['EXTERNAL FACING']]"
+          },
+          {
+            "field": "tags[SYSTEM TYPE]",
+            "notEquals": "[resourcegroup().tags['SYSTEM TYPE']]"
+          },
+          {
+            "field": "tags[PIIINFORMATION]",
+            "notEquals": "[resourcegroup().tags['PIIINFORMATION']]"
+          },
+          {
+            "field": "tags[DATATYPE]",
+            "notEquals": "[resourcegroup().tags['DATATYPE']]"
+          },
+          {
+            "field": "tags[CMDBREFERENCE]",
+            "notEquals": "[resourcegroup().tags['CMDBREFERENCE']]"
+          }
+        ]
+      },
+      "then": {
+        "effect": "modify",
+        "details": {
+          "roleDefinitionIds": [
+            "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+          ],
+          "operations": [
+            {
+              "operation": "addOrReplace",
+              "field": "tags[APPLICATION LAYER]",
+              "value": "[resourcegroup().tags['APPLICATION LAYER']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[DIVISION]",
+              "value": "[resourcegroup().tags['DIVISION']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[BUSINESS UNIT]",
+              "value": "[resourcegroup().tags['BUSINESS UNIT']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[DEPARTMENT]",
+              "value": "[resourcegroup().tags['DEPARTMENT']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[COST CENTER]",
+              "value": "[resourcegroup().tags['COST CENTER']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[APPLICATION CATEGORY]",
+              "value": "[resourceGroup().tags['APPLICATION CATEGORY']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[ASSET GROUP]",
+              "value": "[resourceGroup().tags['ASSET GROUP']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[ASSET OWNER]",
+              "value": "[resourceGroup().tags['ASSET OWNER']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[ASSET CATEGORY]",
+              "value": "[resourceGroup().tags['ASSET CATEGORY']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[ASSET NAME]",
+              "value": "[resourceGroup().tags['ASSET NAME']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[CREATEDBY]",
+              "value": "[resourcegroup().tags['CREATEDBY']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[BSO]",
+              "value": "[resourceGroup().tags['BSO']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[TSO]",
+              "value": "[resourceGroup().tags['TSO']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[SITECODE]",
+              "value": "[resourceGroup().tags['SITECODE']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[REGION]",
+              "value": "[resourceGroup().tags['REGION']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[COUNTRY]",
+              "value": "[resourceGroup().tags['COUNTRY']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[ENVIRONMEN​T]",
+              "value": "[resourceGroup().tags['ENVIRONMEN​T']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[ASSET ADMINISTRATOR]",
+              "value": "[resourceGroup().tags['ASSET ADMINISTRATOR']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[DISTRIBUTION LIST]",
+              "value": "[resourceGroup().tags['DISTRIBUTION LIST']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[BACKUP]",
+              "value": "[resourceGroup().tags['BACKUP']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[PRODUCT MANAGER]",
+              "value": "[resourceGroup().tags['PRODUCT MANAGER']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[ADMIN SECURITYGROUP]",
+              "value": "[resourceGroup().tags['ADMIN SECURITYGROUP']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[EXTERNAL FACING]",
+              "value": "[resourceGroup().tags['EXTERNAL FACING']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[SYSTEM TYPE]",
+              "value": "[resourceGroup().tags['SYSTEM TYPE']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[PIIINFORMATION]",
+              "value": "[resourceGroup().tags['PIIINFORMATION']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[DATATYPE]",
+              "value": "[resourceGroup().tags['DATATYPE']]"
+            },
+            {
+              "operation": "addOrReplace",
+              "field": "tags[CMDBREFERENCE]",
+              "value": "[resourceGroup().tags['CMDBREFERENCE']]"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
