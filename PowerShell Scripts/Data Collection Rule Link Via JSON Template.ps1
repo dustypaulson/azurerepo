@@ -1,7 +1,17 @@
-﻿param(
+param(
 $defaultDataCollectionRuleResourceId,
-$workspaceID
+$workspaceID,
+$subID,
+$tenantID,
+$userName,
+$SecurePassword
 )
+
+$cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $userName, $SecurePassword
+
+Connect-AzAccount -Subscription $subID -Tenant $tenantID -Credential $cred
+
+Select-AzSubscription -SubscriptionId $subID
 
 $defaultDcrParams = @"
 {
