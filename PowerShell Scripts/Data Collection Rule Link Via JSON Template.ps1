@@ -7,7 +7,8 @@ $userName,
 $SecurePassword
 )
 
-$cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $userName, $SecurePassword
+$pass = ConvertTo-SecureString $SecurePassword -AsPlainText -Force
+$cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $userName,$pass
 
 Connect-AzAccount -Subscription $subID -Tenant $tenantID -Credential $cred
 
